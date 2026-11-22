@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tabela Periódica</title>
+  <style>
+    /* ==========================================================================
+       1. VARIÁVEIS E CONFIGURAÇÕES GLOBAIS
+       ========================================================================== */
+    :root {
+      /* Cores de fundo e texto */
+      --bg-dark: #0b0f17;
+      --bg-panel: #151c2c;
+      --bg-panel-hover: #1e283e;
+      --border-subtle: #2a3654;
+      --text-main: #eef2f9;
+      --text-muted: #8e9bb3;
+      --accent: #5b8cff;
+
+      /* Paleta das Famílias Químicas */
+      --cat-a: #f59e0b; /* Metais alcalinos */
+      --cat-e: #facc15; /* Metais alcalino-terrosos */
+      --cat-t: #e58b87; /* Metais de transição */
+      --cat-l: #f2a07b; /* Lantanídeos */
+      --cat-c: #c58ad8; /* Actinídeos */
+      --cat-r: #8fa99c; /* Metais representativos */
+      --cat-s: #6fd08c; /* Semimetais */
+      --cat-n: #38d060; /* Não-metais */
+      --cat-h: #2cc9c9; /* Halogênios */
+      --cat-g: #5b9af0; /* Gases nobres */
+
+      /* Suporte a áreas seguras (notch de celulares) */
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-padding-top: var(--safe-top);
+    }
+
+    body {
+      background: radial-gradient(1100px 650px at 15% -10%, #1c2947, transparent), var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(56px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       2. CABEÇALHO E MENU DE MODOS
+       ========================================================================== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #1a2236;
+      background: rgba(11, 15, 23, 0.75);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand span {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 12.5px;
+      background: var(--bg-panel);
+      padding: 2px 8px;
+      border-radius: 99px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    #menu {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    #menu button {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 6px 13px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #menu button:hover {
+      background: var(--bg-panel-hover);
+      transform: translateY(-1px);
+    }
+
+    #menu button.on {
+      background: linear-gradient(135deg, #4f7cff, #8a5cff);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(79, 124, 255, 0.4);
+    }
+
+    /* ==========================================================================
+       3. CONTAINER RESPONSIVO E GRADE DA TABELA PERIÓDICA
+       ========================================================================== */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding: 14px 12px 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #tb {
+      display: grid;
+      grid-template-columns: repeat(18, minmax(46px, 1fr));
+      grid-template-rows: repeat(7, auto) 14px repeat(2, auto);
+      gap: 4px;
+      width: min(98vw, calc((100vh - 95px) * 1.72));
+      min-width: 880px;
+      margin: 0 auto;
+    }
+
+    .c, .ph {
+      container-type: inline-size;
+      aspect-ratio: 1 / 1.1;
+      border-radius: 7%;
+    }
+
+    .c {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #111;
+      cursor: pointer;
+      background: #232a3a;
+      transition: background 0.4s, color 0.4s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s, box-shadow 0.2s;
+      user-select: none;
+      padding: 2px;
+    }
+
+    .c:hover, .c:focus-visible {
+      transform: scale(1.22);
+      z-index: 10;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.75);
+      outline: 2px solid #fff;
+    }
+
+    .c i {
+      position: absolute;
+      top: 5%;
+      left: 8%;
+      font-size: 18cqw;
+      font-style: normal;
+      font-weight: 600;
+      opacity: 0.78;
+    }
+
+    .c b {
+      font-size: 43cqw;
+      font-weight: 700;
+      line-height: 1.05;
+      margin-top: 4%;
+    }
+
+    .c small {
+      font-size: 0.55rem;
+      font-weight: 500;
+      opacity: 0.92;
+      white-space: nowrap;
+      max-width: 96%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ph {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* font-size: 19cqw; */
+      font-size: clamp(10px, 1vw, 13px);
+      font-weight: 700;
+      color: #111;
+      opacity: 0.65;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .ph:hover { opacity: 0.95; }
+
+    .lb {
+      grid-column: 1 / 3;
+      font-size: clamp(10px, 1vw, 13px);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-weight: 500;
+    }
+
+    /* ==========================================================================
+       4. PAINEL CENTRAL DE INFORMAÇÕES, BUSCA E CONTROLE DE TEMPERATURA
+       ========================================================================== */
+    #info {
+      grid-area: 1 / 3 / 4 / 13;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      padding: 4px 16px;
+    }
+
+    #info h2 {
+      font-size: clamp(17px, 2.1vw, 26px);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    #info p {
+      color: var(--text-muted);
+      font-size: clamp(11.5px, 1vw, 13.5px);
+      line-height: 1.4;
+      max-width: 520px;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .search-box {
+      position: relative;
+      width: min(300px, 100%);
+    }
+
+    #q {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 8px 32px 8px 12px;
+      width: 100%;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #q:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.25);
+    }
+
+    #clear-q {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+    }
+    #clear-q.visible { display: block; }
+
+    #temp-control {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12.5px;
+    }
+    #temp-control.visible { display: flex; }
+    #temp-slider {
+      width: 130px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    #temp-val {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      min-width: 115px;
+      color: #fff;
+    }
+
+    /* ==========================================================================
+       5. LEGENDA FLUTUANTE INTERATIVA
+       ========================================================================== */
+    #lg {
+      position: fixed;
+      right: 14px;
+      bottom: calc(14px + var(--safe-bottom));
+      z-index: 25;
+      background: rgba(21, 28, 44, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      font-size: 12px;
+      width: fit-content;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    #lgb {
+      all: unset;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 10px 14px;
+      font-weight: 600;
+      box-sizing: border-box;
+      color: #fff;
+    }
+
+    #lgc {
+      max-height: 0;
+      overflow: hidden;
+      padding: 0 14px;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+    }
+
+    #lg.open #lgc {
+      max-height: 400px;
+      padding: 2px 14px 12px;
+    }
+
+    #lgb span { transition: transform 0.3s; }
+    #lg.open #lgb span { transform: rotate(180deg); }
+
+    .li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      margin: 1px -6px;
+      border-radius: 6px;
+      color: #d6deed;
+      transition: background 0.15s;
+    }
+
+    .li.interactive { cursor: pointer; }
+    .li.interactive:hover, .li.active-cat {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .li u {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      flex: none;
+    }
+
+    .gr {
+      height: 12px;
+      border-radius: 6px;
+      margin: 6px 0 4px;
+    }
+
+    .gl {
+      display: flex;
+      justify-content: space-between;
+      color: #cfd6e6;
+      font-size: 11px;
+    }
+
+    /* ==========================================================================
+       6. MODAL DE DETALHES DO ELEMENTO (CARTÃO)
+       ========================================================================== */
+    #scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.82);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+      z-index: 50;
+    }
+    #scrim.on { opacity: 1; pointer-events: auto; }
+
+    #card {
+      position: fixed;
+      z-index: 60;
+      display: none;
+      overflow: hidden;
+      color: #1b2231;
+      transition: left 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  top 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  border-radius 0.45s,
+                  background 0.45s;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75);
+    }
+
+    #ci {
+      display: grid;
+      grid-template-columns: 265px 1fr;
+      gap: 22px;
+      padding: 22px;
+      height: 100%;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    #ci::-webkit-scrollbar {
+      display: none;
+    }
+
+    #card.full #ci { opacity: 1; }
+    #ci.sw { opacity: 0 !important; }
+
+    #nav {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      display: flex;
+      gap: 8px;
+      z-index: 5;
+    }
+
+    #nav button {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 0;
+      background: rgba(27, 34, 49, 0.14);
+      color: #1b2231;
+      font-size: 19px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #nav button:hover {
+      background: rgba(27, 34, 49, 0.28);
+      transform: scale(1.08);
+    }
+
+    .lf {
+      text-align: center;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .lz { font-size: 32px; font-weight: 800; line-height: 1.1; }
+    .ab {
+      position: relative;
+      height: 235px;
+      background: #fff;
+      border-radius: 20px;
+      margin: 8px 0;
+      overflow: hidden;
+      box-shadow: inset 0 0 28px #c5cbd6;
+    }
+    .pr {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-align: right;
+      line-height: 1.35;
+      color: #394258;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+    .dm {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #394258;
+    }
+    .dm hr {
+      flex: 1;
+      border: 0;
+      border-top: 2px solid #394258;
+    }
+    .sy { font-size: 76px; font-weight: 800; line-height: 1; margin-top: 4px; }
+    .nm { font-size: 23px; font-weight: 700; margin-bottom: 4px; }
+    .pc { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: start; 
+      font-size: 12.5px; 
+      font-weight: 500; 
+      color: #394258; 
+    }
+
+    .rg h3 {
+      font-size: 20px;
+      margin: 2px 110px 12px 0;
+      color: #141a26;
+    }
+    .pg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .pg div {
+      background: rgba(255, 255, 255, 0.62);
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+    .pg .w { grid-column: span 2; }
+    .pg small {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4a5570;
+      margin-bottom: 2px;
+    }
+    .pg b { font-size: 14.5px; color: #111827; }
+    .dot {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+    }
+
+    /* ==========================================================================
+       7. ANIMAÇÃO DO MODELO ATÔMICO (PRESERVADA INTEGRALMENTE)
+       ========================================================================== */
+    .at { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+    .rn { position: absolute; border: 1px solid #9aa4bb88; border-radius: 50%; animation: sp var(--d) linear infinite; }
+    .el { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #ffd23f; border: 1.5px solid #6a5a10; box-shadow: 0 0 6px #ffd23faa; }
+    .pt { position: absolute; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; animation: jg 1.6s ease-in-out infinite alternate; font-size: 8px; line-height: 9px; text-align: center; color: #0d3b0d; font-weight: 700; }
+    .p { background: #5fc94a; border: 1px solid #2c7a1f; }
+    .nt { background: #3b9ae1; border: 1px solid #1d5f9a; }
+
+    @keyframes sp { to { transform: rotate(360deg); } }
+    @keyframes jg { to { transform: translate(1.5px, -1.5px); } }
+
+    /* ==========================================================================
+       8. MODO HORIZONTAL FORÇADO NO CELULAR (RETRATO) E ACESSIBILIDADE
+       ========================================================================== */
+    @media (max-width: 768px) and (orientation: portrait) {
+      /* Rotaciona o corpo inteiro em 90 graus para forçar exibição na horizontal */
+      body {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100dvh;
+        height: 100vw;
+        min-height: unset;
+        transform: rotate(90deg);
+        transform-origin: top left;
+        translate: 100vw 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-top: 0;
+        padding-bottom: 24px;
+      }
+
+      header {
+        padding: 8px 14px;
+      }
+
+      .brand h1 {
+        font-size: 15px;
+      }
+
+      #menu button {
+        padding: 5px 10px;
+        font-size: 11.5px;
+      }
+
+      .table-wrapper {
+        padding: 8px 10px 16px;
+      }
+
+      #tb {
+        width: 100%;
+        min-width: 680px;
+        gap: 2.5px;
+      }
+
+      #lg {
+        right: 10px;
+        bottom: 10px;
+        font-size: 11px;
+      }
+
+      #ci {
+        grid-template-columns: 210px 1fr;
+        gap: 14px;
+        padding: 14px;
+      }
+
+      .ab { height: 170px; }
+      .sy { font-size: 52px; }
+      .nm { font-size: 18px; }
+      .rg h3 { font-size: 17px; margin-right: 100px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0s !important; transition-duration: 0s !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CABEÇALHO SUPERIOR -->
+  <header>
+    <nav id="menu" aria-label="Modos de visualização"></nav>
+  </header>
+
+  <!-- ÁREA DA TABELA PERIÓDICA -->
+  <div class="table-wrapper">
+    <main id="tb" aria-label="Tabela Periódica dos Elementos"></main>
+  </div>
+
+  <!-- LEGENDA FLUTUANTE -->
+  <aside id="lg">
+    <button id="lgb" aria-expanded="false">Legenda <span>▴</span></button>
+    <div id="lgc"></div>
+  </aside>
+
+  <!-- MODAL DE DETALHES DO ELEMENTO -->
+  <div id="scrim"></div>
+  <div id="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
+    <div id="nav">
+      <button id="pv" title="Elemento anterior (Seta Esquerda)" aria-label="Anterior">‹</button>
+      <button id="nx" title="Próximo elemento (Seta Direita)" aria-label="Próximo">›</button>
+      <button id="x" title="Fechar (Esc)" aria-label="Fechar">×</button>
+    </div>
+    <div id="ci"></div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. BASE DE DADOS EM JSON DOS 118 ELEMENTOS QUÍMICOS
+       Chaves:
+       - z: número atômico
+       - symbol: símbolo químico
+       - name: nome do elemento
+       - mass: massa atômica (u)
+       - electronegativity: eletronegatividade (Pauling)
+       - radius: raio atômico (pm)
+       - density: densidade (g/cm³)
+       - meltingPoint: ponto de fusão (°C)
+       - boilingPoint: ponto de ebulição (°C)
+       - category: código da família (a, e, t, l, c, r, s, n, h, g)
+       ========================================================================== */
+    const ELEMENTS = [
+      { z: 1, symbol: "H", name: "Hidrogênio", mass: 1.008, electronegativity: 2.2, radius: 25, density: 0.0000899, meltingPoint: -259, boilingPoint: -253, category: "n" },
+      { z: 2, symbol: "He", name: "Hélio", mass: 4.0026, electronegativity: null, radius: 31, density: 0.000179, meltingPoint: -272, boilingPoint: -269, category: "g" },
+      { z: 3, symbol: "Li", name: "Lítio", mass: 6.94, electronegativity: 0.98, radius: 145, density: 0.534, meltingPoint: 181, boilingPoint: 1342, category: "a" },
+      { z: 4, symbol: "Be", name: "Berílio", mass: 9.0122, electronegativity: 1.57, radius: 105, density: 1.85, meltingPoint: 1287, boilingPoint: 2470, category: "e" },
+      { z: 5, symbol: "B", name: "Boro", mass: 10.81, electronegativity: 2.04, radius: 85, density: 2.34, meltingPoint: 2075, boilingPoint: 4000, category: "s" },
+      { z: 6, symbol: "C", name: "Carbono", mass: 12.011, electronegativity: 2.55, radius: 70, density: 2.27, meltingPoint: 3550, boilingPoint: 4027, category: "n" },
+      { z: 7, symbol: "N", name: "Nitrogênio", mass: 14.007, electronegativity: 3.04, radius: 65, density: 0.00125, meltingPoint: -210, boilingPoint: -196, category: "n" },
+      { z: 8, symbol: "O", name: "Oxigênio", mass: 15.999, electronegativity: 3.44, radius: 60, density: 0.00143, meltingPoint: -218, boilingPoint: -183, category: "n" },
+      { z: 9, symbol: "F", name: "Flúor", mass: 18.998, electronegativity: 3.98, radius: 50, density: 0.0017, meltingPoint: -220, boilingPoint: -188, category: "h" },
+      { z: 10, symbol: "Ne", name: "Neônio", mass: 20.18, electronegativity: null, radius: 38, density: 0.0009, meltingPoint: -249, boilingPoint: -246, category: "g" },
+      { z: 11, symbol: "Na", name: "Sódio", mass: 22.99, electronegativity: 0.93, radius: 180, density: 0.971, meltingPoint: 98, boilingPoint: 883, category: "a" },
+      { z: 12, symbol: "Mg", name: "Magnésio", mass: 24.305, electronegativity: 1.31, radius: 150, density: 1.74, meltingPoint: 650, boilingPoint: 1090, category: "e" },
+      { z: 13, symbol: "Al", name: "Alumínio", mass: 26.982, electronegativity: 1.61, radius: 125, density: 2.7, meltingPoint: 660, boilingPoint: 2519, category: "r" },
+      { z: 14, symbol: "Si", name: "Silício", mass: 28.085, electronegativity: 1.9, radius: 110, density: 2.33, meltingPoint: 1414, boilingPoint: 3265, category: "s" },
+      { z: 15, symbol: "P", name: "Fósforo", mass: 30.974, electronegativity: 2.19, radius: 100, density: 1.82, meltingPoint: 44, boilingPoint: 281, category: "n" },
+      { z: 16, symbol: "S", name: "Enxofre", mass: 32.06, electronegativity: 2.58, radius: 100, density: 2.07, meltingPoint: 115, boilingPoint: 445, category: "n" },
+      { z: 17, symbol: "Cl", name: "Cloro", mass: 35.45, electronegativity: 3.16, radius: 100, density: 0.0032, meltingPoint: -102, boilingPoint: -34, category: "h" },
+      { z: 18, symbol: "Ar", name: "Argônio", mass: 39.948, electronegativity: null, radius: 71, density: 0.00178, meltingPoint: -189, boilingPoint: -186, category: "g" },
+      { z: 19, symbol: "K", name: "Potássio", mass: 39.098, electronegativity: 0.82, radius: 220, density: 0.862, meltingPoint: 64, boilingPoint: 759, category: "a" },
+      { z: 20, symbol: "Ca", name: "Cálcio", mass: 40.078, electronegativity: 1, radius: 180, density: 1.55, meltingPoint: 842, boilingPoint: 1484, category: "e" },
+      { z: 21, symbol: "Sc", name: "Escândio", mass: 44.956, electronegativity: 1.36, radius: 160, density: 2.99, meltingPoint: 1541, boilingPoint: 2836, category: "t" },
+      { z: 22, symbol: "Ti", name: "Titânio", mass: 47.867, electronegativity: 1.54, radius: 140, density: 4.51, meltingPoint: 1668, boilingPoint: 3287, category: "t" },
+      { z: 23, symbol: "V", name: "Vanádio", mass: 50.942, electronegativity: 1.63, radius: 135, density: 6.11, meltingPoint: 1910, boilingPoint: 3407, category: "t" },
+      { z: 24, symbol: "Cr", name: "Cromo", mass: 51.996, electronegativity: 1.66, radius: 140, density: 7.15, meltingPoint: 1907, boilingPoint: 2671, category: "t" },
+      { z: 25, symbol: "Mn", name: "Manganês", mass: 54.938, electronegativity: 1.55, radius: 140, density: 7.44, meltingPoint: 1246, boilingPoint: 2061, category: "t" },
+      { z: 26, symbol: "Fe", name: "Ferro", mass: 55.845, electronegativity: 1.83, radius: 140, density: 7.87, meltingPoint: 1538, boilingPoint: 2861, category: "t" },
+      { z: 27, symbol: "Co", name: "Cobalto", mass: 58.933, electronegativity: 1.88, radius: 135, density: 8.86, meltingPoint: 1495, boilingPoint: 2927, category: "t" },
+      { z: 28, symbol: "Ni", name: "Níquel", mass: 58.693, electronegativity: 1.91, radius: 135, density: 8.91, meltingPoint: 1455, boilingPoint: 2913, category: "t" },
+      { z: 29, symbol: "Cu", name: "Cobre", mass: 63.546, electronegativity: 1.9, radius: 135, density: 8.96, meltingPoint: 1085, boilingPoint: 2562, category: "t" },
+      { z: 30, symbol: "Zn", name: "Zinco", mass: 65.38, electronegativity: 1.65, radius: 135, density: 7.14, meltingPoint: 420, boilingPoint: 907, category: "t" },
+      { z: 31, symbol: "Ga", name: "Gálio", mass: 69.723, electronegativity: 1.81, radius: 130, density: 5.91, meltingPoint: 30, boilingPoint: 2204, category: "r" },
+      { z: 32, symbol: "Ge", name: "Germânio", mass: 72.63, electronegativity: 2.01, radius: 125, density: 5.32, meltingPoint: 938, boilingPoint: 2833, category: "s" },
+      { z: 33, symbol: "As", name: "Arsênio", mass: 74.922, electronegativity: 2.18, radius: 115, density: 5.73, meltingPoint: 817, boilingPoint: 614, category: "s" },
+      { z: 34, symbol: "Se", name: "Selênio", mass: 78.971, electronegativity: 2.55, radius: 115, density: 4.81, meltingPoint: 221, boilingPoint: 685, category: "n" },
+      { z: 35, symbol: "Br", name: "Bromo", mass: 79.904, electronegativity: 2.96, radius: 115, density: 3.12, meltingPoint: -7, boilingPoint: 59, category: "h" },
+      { z: 36, symbol: "Kr", name: "Criptônio", mass: 83.798, electronegativity: 3, radius: 88, density: 0.00375, meltingPoint: -157, boilingPoint: -153, category: "g" },
+      { z: 37, symbol: "Rb", name: "Rubídio", mass: 85.468, electronegativity: 0.82, radius: 235, density: 1.53, meltingPoint: 39, boilingPoint: 688, category: "a" },
+      { z: 38, symbol: "Sr", name: "Estrôncio", mass: 87.62, electronegativity: 0.95, radius: 200, density: 2.64, meltingPoint: 777, boilingPoint: 1377, category: "e" },
+      { z: 39, symbol: "Y", name: "Ítrio", mass: 88.906, electronegativity: 1.22, radius: 180, density: 4.47, meltingPoint: 1526, boilingPoint: 3345, category: "t" },
+      { z: 40, symbol: "Zr", name: "Zircônio", mass: 91.224, electronegativity: 1.33, radius: 155, density: 6.51, meltingPoint: 1855, boilingPoint: 4409, category: "t" },
+      { z: 41, symbol: "Nb", name: "Nióbio", mass: 92.906, electronegativity: 1.6, radius: 145, density: 8.57, meltingPoint: 2477, boilingPoint: 4744, category: "t" },
+      { z: 42, symbol: "Mo", name: "Molibdênio", mass: 95.95, electronegativity: 2.16, radius: 145, density: 10.2, meltingPoint: 2623, boilingPoint: 4639, category: "t" },
+      { z: 43, symbol: "Tc", name: "Tecnécio", mass: 98, electronegativity: 1.9, radius: 135, density: 11, meltingPoint: 2157, boilingPoint: 4265, category: "t" },
+      { z: 44, symbol: "Ru", name: "Rutênio", mass: 101.07, electronegativity: 2.2, radius: 130, density: 12.4, meltingPoint: 2334, boilingPoint: 4150, category: "t" },
+      { z: 45, symbol: "Rh", name: "Ródio", mass: 102.91, electronegativity: 2.28, radius: 135, density: 12.4, meltingPoint: 1964, boilingPoint: 3695, category: "t" },
+      { z: 46, symbol: "Pd", name: "Paládio", mass: 106.42, electronegativity: 2.2, radius: 140, density: 12, meltingPoint: 1555, boilingPoint: 2963, category: "t" },
+      { z: 47, symbol: "Ag", name: "Prata", mass: 107.87, electronegativity: 1.93, radius: 160, density: 10.5, meltingPoint: 962, boilingPoint: 2162, category: "t" },
+      { z: 48, symbol: "Cd", name: "Cádmio", mass: 112.41, electronegativity: 1.69, radius: 155, density: 8.65, meltingPoint: 321, boilingPoint: 767, category: "t" },
+      { z: 49, symbol: "In", name: "Índio", mass: 114.82, electronegativity: 1.78, radius: 155, density: 7.31, meltingPoint: 157, boilingPoint: 2072, category: "r" },
+      { z: 50, symbol: "Sn", name: "Estanho", mass: 118.71, electronegativity: 1.96, radius: 145, density: 7.29, meltingPoint: 232, boilingPoint: 2602, category: "r" },
+      { z: 51, symbol: "Sb", name: "Antimônio", mass: 121.76, electronegativity: 2.05, radius: 145, density: 6.7, meltingPoint: 631, boilingPoint: 1587, category: "s" },
+      { z: 52, symbol: "Te", name: "Telúrio", mass: 127.6, electronegativity: 2.1, radius: 140, density: 6.24, meltingPoint: 450, boilingPoint: 988, category: "s" },
+      { z: 53, symbol: "I", name: "Iodo", mass: 126.9, electronegativity: 2.66, radius: 140, density: 4.93, meltingPoint: 114, boilingPoint: 184, category: "h" },
+      { z: 54, symbol: "Xe", name: "Xenônio", mass: 131.29, electronegativity: 2.6, radius: 108, density: 0.0059, meltingPoint: -112, boilingPoint: -108, category: "g" },
+      { z: 55, symbol: "Cs", name: "Césio", mass: 132.91, electronegativity: 0.79, radius: 260, density: 1.93, meltingPoint: 29, boilingPoint: 671, category: "a" },
+      { z: 56, symbol: "Ba", name: "Bário", mass: 137.33, electronegativity: 0.89, radius: 215, density: 3.51, meltingPoint: 727, boilingPoint: 1845, category: "e" },
+      { z: 57, symbol: "La", name: "Lantânio", mass: 138.91, electronegativity: 1.1, radius: 195, density: 6.16, meltingPoint: 920, boilingPoint: 3464, category: "l" },
+      { z: 58, symbol: "Ce", name: "Cério", mass: 140.12, electronegativity: 1.12, radius: 185, density: 6.77, meltingPoint: 795, boilingPoint: 3443, category: "l" },
+      { z: 59, symbol: "Pr", name: "Praseodímio", mass: 140.91, electronegativity: 1.13, radius: 185, density: 6.77, meltingPoint: 935, boilingPoint: 3520, category: "l" },
+      { z: 60, symbol: "Nd", name: "Neodímio", mass: 144.24, electronegativity: 1.14, radius: 185, density: 7.01, meltingPoint: 1024, boilingPoint: 3074, category: "l" },
+      { z: 61, symbol: "Pm", name: "Promécio", mass: 145, electronegativity: 1.13, radius: 185, density: 7.26, meltingPoint: 1042, boilingPoint: 3000, category: "l" },
+      { z: 62, symbol: "Sm", name: "Samário", mass: 150.36, electronegativity: 1.17, radius: 185, density: 7.52, meltingPoint: 1072, boilingPoint: 1794, category: "l" },
+      { z: 63, symbol: "Eu", name: "Európio", mass: 151.96, electronegativity: 1.2, radius: 185, density: 5.24, meltingPoint: 826, boilingPoint: 1529, category: "l" },
+      { z: 64, symbol: "Gd", name: "Gadolínio", mass: 157.25, electronegativity: 1.2, radius: 180, density: 7.9, meltingPoint: 1312, boilingPoint: 3273, category: "l" },
+      { z: 65, symbol: "Tb", name: "Térbio", mass: 158.93, electronegativity: 1.1, radius: 175, density: 8.23, meltingPoint: 1356, boilingPoint: 3230, category: "l" },
+      { z: 66, symbol: "Dy", name: "Disprósio", mass: 162.5, electronegativity: 1.22, radius: 175, density: 8.55, meltingPoint: 1407, boilingPoint: 2567, category: "l" },
+      { z: 67, symbol: "Ho", name: "Hólmio", mass: 164.93, electronegativity: 1.23, radius: 175, density: 8.8, meltingPoint: 1461, boilingPoint: 2720, category: "l" },
+      { z: 68, symbol: "Er", name: "Érbio", mass: 167.26, electronegativity: 1.24, radius: 175, density: 9.07, meltingPoint: 1529, boilingPoint: 2868, category: "l" },
+      { z: 69, symbol: "Tm", name: "Túlio", mass: 168.93, electronegativity: 1.25, radius: 175, density: 9.32, meltingPoint: 1545, boilingPoint: 1950, category: "l" },
+      { z: 70, symbol: "Yb", name: "Itérbio", mass: 173.05, electronegativity: 1.1, radius: 175, density: 6.9, meltingPoint: 824, boilingPoint: 1196, category: "l" },
+      { z: 71, symbol: "Lu", name: "Lutécio", mass: 174.97, electronegativity: 1.27, radius: 175, density: 9.84, meltingPoint: 1652, boilingPoint: 3402, category: "l" },
+      { z: 72, symbol: "Hf", name: "Háfnio", mass: 178.49, electronegativity: 1.3, radius: 155, density: 13.3, meltingPoint: 2233, boilingPoint: 4603, category: "t" },
+      { z: 73, symbol: "Ta", name: "Tântalo", mass: 180.95, electronegativity: 1.5, radius: 145, density: 16.7, meltingPoint: 3017, boilingPoint: 5458, category: "t" },
+      { z: 74, symbol: "W", name: "Tungstênio", mass: 183.84, electronegativity: 2.36, radius: 135, density: 19.3, meltingPoint: 3422, boilingPoint: 5555, category: "t" },
+      { z: 75, symbol: "Re", name: "Rênio", mass: 186.21, electronegativity: 1.9, radius: 135, density: 21, meltingPoint: 3186, boilingPoint: 5596, category: "t" },
+      { z: 76, symbol: "Os", name: "Ósmio", mass: 190.23, electronegativity: 2.2, radius: 130, density: 22.6, meltingPoint: 3033, boilingPoint: 5012, category: "t" },
+      { z: 77, symbol: "Ir", name: "Irídio", mass: 192.22, electronegativity: 2.2, radius: 135, density: 22.6, meltingPoint: 2446, boilingPoint: 4428, category: "t" },
+      { z: 78, symbol: "Pt", name: "Platina", mass: 195.08, electronegativity: 2.28, radius: 135, density: 21.5, meltingPoint: 1768, boilingPoint: 3825, category: "t" },
+      { z: 79, symbol: "Au", name: "Ouro", mass: 196.97, electronegativity: 2.54, radius: 135, density: 19.3, meltingPoint: 1064, boilingPoint: 2856, category: "t" },
+      { z: 80, symbol: "Hg", name: "Mercúrio", mass: 200.59, electronegativity: 2, radius: 150, density: 13.5, meltingPoint: -39, boilingPoint: 357, category: "t" },
+      { z: 81, symbol: "Tl", name: "Tálio", mass: 204.38, electronegativity: 1.62, radius: 190, density: 11.9, meltingPoint: 304, boilingPoint: 1473, category: "r" },
+      { z: 82, symbol: "Pb", name: "Chumbo", mass: 207.2, electronegativity: 2.33, radius: 180, density: 11.3, meltingPoint: 327, boilingPoint: 1749, category: "r" },
+      { z: 83, symbol: "Bi", name: "Bismuto", mass: 208.98, electronegativity: 2.02, radius: 160, density: 9.78, meltingPoint: 271, boilingPoint: 1564, category: "r" },
+      { z: 84, symbol: "Po", name: "Polônio", mass: 209, electronegativity: 2, radius: 190, density: 9.2, meltingPoint: 254, boilingPoint: 962, category: "r" },
+      { z: 85, symbol: "At", name: "Astato", mass: 210, electronegativity: 2.2, radius: null, density: null, meltingPoint: 302, boilingPoint: 337, category: "h" },
+      { z: 86, symbol: "Rn", name: "Radônio", mass: 222, electronegativity: 2.2, radius: 120, density: 0.00973, meltingPoint: -71, boilingPoint: -62, category: "g" },
+      { z: 87, symbol: "Fr", name: "Frâncio", mass: 223, electronegativity: 0.7, radius: 348, density: null, meltingPoint: 27, boilingPoint: 677, category: "a" },
+      { z: 88, symbol: "Ra", name: "Rádio", mass: 226, electronegativity: 0.9, radius: 215, density: 5.5, meltingPoint: 700, boilingPoint: 1737, category: "e" },
+      { z: 89, symbol: "Ac", name: "Actínio", mass: 227, electronegativity: 1.1, radius: 195, density: 10.1, meltingPoint: 1050, boilingPoint: 3200, category: "c" },
+      { z: 90, symbol: "Th", name: "Tório", mass: 232.04, electronegativity: 1.3, radius: 180, density: 11.7, meltingPoint: 1750, boilingPoint: 4788, category: "c" },
+      { z: 91, symbol: "Pa", name: "Protactínio", mass: 231.04, electronegativity: 1.5, radius: 180, density: 15.4, meltingPoint: 1568, boilingPoint: 4000, category: "c" },
+      { z: 92, symbol: "U", name: "Urânio", mass: 238.03, electronegativity: 1.38, radius: 175, density: 19.1, meltingPoint: 1132, boilingPoint: 4131, category: "c" },
+      { z: 93, symbol: "Np", name: "Netúnio", mass: 237, electronegativity: 1.36, radius: 175, density: 20.5, meltingPoint: 644, boilingPoint: 3900, category: "c" },
+      { z: 94, symbol: "Pu", name: "Plutônio", mass: 244, electronegativity: 1.28, radius: 175, density: 19.8, meltingPoint: 640, boilingPoint: 3228, category: "c" },
+      { z: 95, symbol: "Am", name: "Amerício", mass: 243, electronegativity: 1.13, radius: 175, density: 13.7, meltingPoint: 1176, boilingPoint: 2011, category: "c" },
+      { z: 96, symbol: "Cm", name: "Cúrio", mass: 247, electronegativity: 1.28, radius: null, density: 13.5, meltingPoint: 1345, boilingPoint: 3110, category: "c" },
+      { z: 97, symbol: "Bk", name: "Berquélio", mass: 247, electronegativity: 1.3, radius: null, density: 14.8, meltingPoint: 986, boilingPoint: null, category: "c" },
+      { z: 98, symbol: "Cf", name: "Califórnio", mass: 251, electronegativity: 1.3, radius: null, density: 15.1, meltingPoint: 900, boilingPoint: null, category: "c" },
+      { z: 99, symbol: "Es", name: "Einstênio", mass: 252, electronegativity: 1.3, radius: null, density: 8.84, meltingPoint: 860, boilingPoint: null, category: "c" },
+      { z: 100, symbol: "Fm", name: "Férmio", mass: 257, electronegativity: 1.3, radius: null, density: null, meltingPoint: 1527, boilingPoint: null, category: "c" },
+      { z: 101, symbol: "Md", name: "Mendelévio", mass: 258, electronegativity: 1.3, radius: null, density: null, meltingPoint: 827, boilingPoint: null, category: "c" },
+      { z: 102, symbol: "No", name: "Nobélio", mass: 259, electronegativity: 1.3, radius: null, density: null, meltingPoint: 827, boilingPoint: null, category: "c" },
+      { z: 103, symbol: "Lr", name: "Laurêncio", mass: 266, electronegativity: 1.3, radius: null, density: null, meltingPoint: 1627, boilingPoint: null, category: "c" },
+      { z: 104, symbol: "Rf", name: "Rutherfórdio", mass: 267, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 105, symbol: "Db", name: "Dúbnio", mass: 268, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 106, symbol: "Sg", name: "Seabórgio", mass: 269, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 107, symbol: "Bh", name: "Bóhrio", mass: 270, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 108, symbol: "Hs", name: "Hássio", mass: 277, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 109, symbol: "Mt", name: "Meitnério", mass: 278, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 110, symbol: "Ds", name: "Darmstádio", mass: 281, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 111, symbol: "Rg", name: "Roentgênio", mass: 282, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 112, symbol: "Cn", name: "Copernício", mass: 285, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "t" },
+      { z: 113, symbol: "Nh", name: "Nihônio", mass: 286, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "r" },
+      { z: 114, symbol: "Fl", name: "Fleróvio", mass: 289, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "r" },
+      { z: 115, symbol: "Mc", name: "Moscóvio", mass: 290, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "r" },
+      { z: 116, symbol: "Lv", name: "Livermório", mass: 293, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "r" },
+      { z: 117, symbol: "Ts", name: "Tenesso", mass: 294, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "h" },
+      { z: 118, symbol: "Og", name: "Oganessônio", mass: 294, electronegativity: null, radius: null, density: null, meltingPoint: null, boilingPoint: null, category: "g" }
+    ];
+
+    /* ==========================================================================
+       2. CONSTANTES DE CLASSIFICAÇÃO E CONFIGURAÇÃO ELETRÔNICA
+       ========================================================================== */
+    const CATEGORIES = {
+      a: 'Metais alcalinos',
+      e: 'Metais alcalino-terrosos',
+      t: 'Metais de transição',
+      l: 'Lantanídeos',
+      c: 'Actinídeos',
+      r: 'Metais representativos',
+      s: 'Semimetais',
+      n: 'Não-metais',
+      h: 'Halogênios',
+      g: 'Gases nobres'
+    };
+
+    const STATES = {
+      s: ['Sólido', '#cfd6e4', '#111'],
+      l: ['Líquido', '#3b9eff', '#fff'],
+      g: ['Gasoso', '#ff6b5b', '#fff'],
+      u: ['Desconhecido', '#2a3142', '#8a94a8']
+    };
+
+    const MODES = {
+      cat:               { n: 'Categorias' },
+      st:                { n: 'Estado físico' },
+      mass:              { n: 'Massa atômica', u: 'u', d: 2 },
+      electronegativity: { n: 'Eletronegatividade', u: 'Pauling', d: 2 },
+      radius:            { n: 'Raio atômico', u: 'pm', d: 0, hi: 260 },
+      density:           { n: 'Densidade', u: 'g/cm³', log: true, sig: true },
+      meltingPoint:      { n: 'Ponto de fusão', u: '°C', d: 0 },
+      boilingPoint:      { n: 'Ponto de ebulição', u: '°C', d: 0 }
+    };
+
+    const EXCEPTIONS = {
+      24: [2,8,13,1], 29: [2,8,18,1], 41: [2,8,18,12,1], 42: [2,8,18,13,1],
+      44: [2,8,18,15,1], 45: [2,8,18,16,1], 46: [2,8,18,18], 47: [2,8,18,18,1],
+      57: [2,8,18,18,9,2], 58: [2,8,18,19,9,2], 64: [2,8,18,25,9,2],
+      78: [2,8,18,32,17,1], 79: [2,8,18,32,18,1], 89: [2,8,18,32,18,9,2],
+      90: [2,8,18,32,18,10,2], 91: [2,8,18,32,20,9,2], 92: [2,8,18,32,21,9,2],
+      93: [2,8,18,32,22,9,2], 96: [2,8,18,32,25,9,2], 103: [2,8,18,32,32,8,3]
+    };
+
+    const ORBITALS = [
+      [1,'s'], [2,'s'], [2,'p'], [3,'s'], [3,'p'], [4,'s'], [3,'d'], [4,'p'],
+      [5,'s'], [4,'d'], [5,'p'], [6,'s'], [4,'f'], [5,'d'], [6,'p'], [7,'s'],
+      [5,'f'], [6,'d'], [7,'p']
+    ];
+    const SUBSHELL_CAP = { s: 2, p: 6, d: 10, f: 14 };
+
+    /* ==========================================================================
+       3. FUNÇÕES UTILITÁRIAS E QUÍMICAS
+       ========================================================================== */
+    const $ = selector => document.querySelector(selector);
+
+    function formatNum(val, modeCfg = {}) {
+      if (val == null) return '—';
+      const opts = modeCfg.sig
+        ? { maximumSignificantDigits: 3 }
+        : { maximumFractionDigits: modeCfg.d ?? 2 };
+      return val.toLocaleString('pt-BR', opts);
+    }
+
+    const normalizeText = str => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    function getSubshells(z) {
+      let rem = z;
+      const dist = [];
+      for (const [n, l] of ORBITALS) {
+        if (rem <= 0) break;
+        const count = Math.min(rem, SUBSHELL_CAP[l]);
+        dist.push([n, l, count]);
+        rem -= count;
+      }
+      return dist;
+    }
+
+    function getShells(z) {
+      if (EXCEPTIONS[z]) return EXCEPTIONS[z];
+      const shells = [];
+      getSubshells(z).forEach(([n, , count]) => {
+        shells[n - 1] = (shells[n - 1] || 0) + count;
+      });
+      return shells;
+    }
+
+    const toSuperscript = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+
+    function getConfigText(z) {
+      const nobleGases = [86, 54, 36, 18, 10, 2];
+      const nobleSymbols = { 86: 'Rn', 54: 'Xe', 36: 'Kr', 18: 'Ar', 10: 'Ne', 2: 'He' };
+      const baseNg = nobleGases.find(ng => ng < z);
+
+      let accumulated = 0;
+      const parts = [];
+      getSubshells(z).forEach(([n, l, count]) => {
+        accumulated += count;
+        if (!baseNg || accumulated > baseNg) {
+          parts.push(n + l + toSuperscript(count));
+        }
+      });
+
+      return (baseNg ? `[${nobleSymbols[baseNg]}] ` : '') + parts.join(' ');
+    }
+
+    function getGridPosition(z) {
+      if (z >= 57 && z <= 71) return [9, z - 54];
+      if (z >= 89 && z <= 103) return [10, z - 86];
+
+      const period = z <= 2 ? 1 : z <= 10 ? 2 : z <= 18 ? 3 : z <= 36 ? 4 : z <= 54 ? 5 : z <= 86 ? 6 : 7;
+      let col;
+
+      if (period === 1) col = z === 1 ? 1 : 18;
+      else if (period < 4) {
+        const offset = z - [3, 11][period - 2];
+        col = offset < 2 ? offset + 1 : offset + 11;
+      } else if (period < 6) {
+        col = z - (period === 4 ? 19 : 37) + 1;
+      } else if (period === 6) {
+        col = z <= 56 ? z - 54 : z - 68;
+      } else {
+        col = z <= 88 ? z - 86 : z - 100;
+      }
+      return [period, col];
+    }
+
+    function getPhysicalState(el, tempC) {
+      if (el.meltingPoint == null) return 'u';
+      if (tempC < el.meltingPoint) return 's';
+      if (el.boilingPoint != null && tempC >= el.boilingPoint) return 'g';
+      if (el.z === 2 && tempC >= -269) return 'g';
+      return 'l';
+    }
+
+    /* ==========================================================================
+       4. ESTADO DA APLICAÇÃO E CONSTRUÇÃO DA INTERFACE
+       ========================================================================== */
+    const tb = $('#tb');
+    const cells = {};
+    let currentMode = 'cat';
+    let currentTemp = 25;
+    let activeCategoryFilter = null;
+    let searchQuery = '';
+    let activeCardZ = null;
+    let isCardOpen = false;
+
+    tb.insertAdjacentHTML('beforeend', `
+      <div id="info">
+        <h2 id="mt"></h2>
+        <p id="md"></p>
+        <div class="controls-row">
+          <div class="search-box">
+            <input id="q" placeholder="Buscar nome, símbolo, nº ou família…" autocomplete="off">
+            <button id="clear-q" title="Limpar busca">×</button>
+          </div>
+          <div id="temp-control">
+            <label for="temp-slider">Temp:</label>
+            <input type="range" id="temp-slider" min="-273" max="6000" value="25">
+            <span id="temp-val">25 °C (298 K)</span>
+          </div>
+        </div>
+      </div>
+    `);
+
+    ELEMENTS.forEach(el => {
+      const [row, col] = getGridPosition(el.z);
+      const cell = document.createElement('div');
+      cell.className = 'c';
+      cell.tabIndex = 0;
+      cell.style.gridArea = `${row} / ${col}`;
+      cell.innerHTML = `<i>${el.z}</i><b>${el.symbol}</b><small></small>`;
+      cell.onclick = () => openCard(el.z);
+      cell.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCard(el.z); } };
+      cells[el.z] = cell;
+      tb.append(cell);
+    });
+
+    [[6, 3, '57–71', 'l'], [7, 3, '89–103', 'c']].forEach(([row, col, text, catKey]) => {
+      const ph = document.createElement('div');
+      ph.className = 'ph';
+      ph.style.gridArea = `${row} / ${col}`;
+      ph.style.background = `var(--cat-${catKey})`;
+      ph.textContent = text;
+      ph.title = `Clique para destacar ${CATEGORIES[catKey]}`;
+      ph.onclick = () => toggleCategoryFilter(catKey);
+      tb.append(ph);
+    });
+
+    [[9, '* Lantanídeos'], [10, '** Actinídeos']].forEach(([row, text]) => {
+      const lb = document.createElement('div');
+      lb.className = 'lb';
+      lb.style.gridRow = row;
+      lb.textContent = text;
+      tb.append(lb);
+    });
+
+    const propertyRanges = {};
+    ['mass', 'electronegativity', 'radius', 'density', 'meltingPoint', 'boilingPoint'].forEach(key => {
+      const vals = ELEMENTS.map(e => e[key]).filter(v => v != null);
+      const cfg = MODES[key];
+      propertyRanges[key] = [Math.min(...vals), cfg.hi || Math.max(...vals)];
+    });
+
+    function normalizeScale(key, val) {
+      const [lo, hi] = propertyRanges[key];
+      const fn = MODES[key].log ? Math.log10 : x => x;
+      return Math.max(0, Math.min(1, (fn(val) - fn(lo)) / (fn(hi) - fn(lo))));
+    }
+
+    const gradientColor = t => `hsl(${250 - 230 * t} 78% ${40 + 10 * t}%)`;
+
+    /* ==========================================================================
+       5. RENDERIZAÇÃO DE CORES, LEGENDA E FILTROS
+       ========================================================================== */
+    function renderTable() {
+      const modeCfg = MODES[currentMode];
+      $('#temp-control').classList.toggle('visible', currentMode === 'st');
+
+      ELEMENTS.forEach(el => {
+        const cell = cells[el.z];
+        let bg, fg = '#fff', subLabel;
+
+        if (currentMode === 'cat') {
+          bg = `var(--cat-${el.category})`;
+          fg = '#111';
+          subLabel = el.name;
+        } else if (currentMode === 'st') {
+          const st = STATES[getPhysicalState(el, currentTemp)];
+          bg = st[1];
+          fg = st[2];
+          subLabel = st[0];
+        } else {
+          const val = el[currentMode];
+          if (val == null) {
+            bg = '#232a3a';
+            fg = '#6b7488';
+            subLabel = '—';
+          } else {
+            bg = gradientColor(normalizeScale(currentMode, val));
+            subLabel = formatNum(val, modeCfg);
+          }
+        }
+
+        cell.style.background = bg;
+        cell.style.color = fg;
+        cell.lastChild.textContent = subLabel;
+      });
+
+      $('#mt').textContent = modeCfg.n;
+      if (currentMode === 'cat') {
+        $('#md').textContent = 'Classificação por família química. Clique em um elemento para ver seu modelo atômico ou filtre pela legenda.';
+      } else if (currentMode === 'st') {
+        $('#md').textContent = `Estado físico da matéria a ${currentTemp} °C (${currentTemp + 273} K). Arraste o controle para simular aquecimento ou resfriamento.`;
+      } else {
+        $('#md').textContent = `${modeCfg.n} (${modeCfg.u}) — escala visual do menor valor (azul) ao maior valor (vermelho).`;
+      }
+
+      let legendHTML = '';
+      if (currentMode === 'cat') {
+        Object.entries(CATEGORIES).forEach(([key, name]) => {
+          const isActive = activeCategoryFilter === key ? 'active-cat' : '';
+          legendHTML += `<div class="li interactive ${isActive}" data-cat="${key}"><u style="background:var(--cat-${key})"></u>${name}</div>`;
+        });
+      } else if (currentMode === 'st') {
+        Object.values(STATES).forEach(([name, color]) => {
+          legendHTML += `<div class="li"><u style="background:${color}"></u>${name}</div>`;
+        });
+      } else {
+        const stops = [0, 0.25, 0.5, 0.75, 1].map(t => gradientColor(t)).join(',');
+        legendHTML = `
+          <div class="gr" style="background:linear-gradient(90deg, ${stops})"></div>
+          <div class="gl">
+            <span>${formatNum(propertyRanges[currentMode][0], modeCfg)}</span>
+            <span>${modeCfg.hi ? '≥ ' : ''}${formatNum(propertyRanges[currentMode][1], modeCfg)} ${modeCfg.u}</span>
+          </div>
+          ${modeCfg.log ? '<div class="li">Escala logarítmica</div>' : ''}
+          <div class="li"><u style="background:#232a3a"></u>Sem dados experimentais</div>
+        `;
+      }
+
+      $('#lgc').innerHTML = legendHTML;
+
+      if (currentMode === 'cat') {
+        document.querySelectorAll('#lgc .li[data-cat]').forEach(item => {
+          item.onclick = () => toggleCategoryFilter(item.dataset.cat);
+        });
+      }
+
+      applyFilters();
+    }
+
+    function toggleCategoryFilter(catKey) {
+      activeCategoryFilter = (activeCategoryFilter === catKey) ? null : catKey;
+      renderTable();
+    }
+
+    function matchesFilter(el) {
+      if (activeCategoryFilter && el.category !== activeCategoryFilter) return false;
+      const q = normalizeText(searchQuery.trim());
+      if (!q) return true;
+
+      return (
+        el.symbol.toLowerCase() === q ||
+        normalizeText(el.name).includes(q) ||
+        String(el.z) === q ||
+        normalizeText(CATEGORIES[el.category]).includes(q)
+      );
+    }
+
+    function applyFilters() {
+      ELEMENTS.forEach(el => {
+        cells[el.z].style.opacity = matchesFilter(el) ? '1' : '0.14';
+      });
+    }
+
+    const menuEl = $('#menu');
+    Object.entries(MODES).forEach(([key, cfg]) => {
+      const btn = document.createElement('button');
+      btn.textContent = cfg.n;
+      btn.onclick = () => {
+        currentMode = key;
+        if (key !== 'cat') activeCategoryFilter = null;
+        [...menuEl.children].forEach(b => b.classList.toggle('on', b === btn));
+        renderTable();
+      };
+      if (key === 'cat') btn.className = 'on';
+      menuEl.append(btn);
+    });
+
+    const searchInput = $('#q');
+    const clearBtn = $('#clear-q');
+
+    searchInput.oninput = e => {
+      searchQuery = e.target.value;
+      clearBtn.classList.toggle('visible', searchQuery.length > 0);
+      applyFilters();
+    };
+
+    clearBtn.onclick = () => {
+      searchQuery = '';
+      searchInput.value = '';
+      clearBtn.classList.remove('visible');
+      applyFilters();
+      searchInput.focus();
+    };
+
+    searchInput.onkeydown = e => {
+      if (e.key === 'Enter') {
+        const found = ELEMENTS.find(matchesFilter);
+        if (found) openCard(found.z);
+      }
+    };
+
+    $('#temp-slider').oninput = e => {
+      currentTemp = Number(e.target.value);
+      $('#temp-val').textContent = `${currentTemp} °C (${currentTemp + 273} K)`;
+      renderTable();
+    };
+
+    $('#lgb').onclick = () => {
+      const lg = $('#lg');
+      const isOpen = lg.classList.toggle('open');
+      $('#lgb').setAttribute('aria-expanded', isOpen);
+    };
+
+    /* ==========================================================================
+       6. RENDERIZAÇÃO DO ÁTOMO ANIMADO (LÓGICA ORIGINAL PRESERVADA)
+       ========================================================================== */
+    function renderAtomAnimation(container, el) {
+      const sh = getShells(el.z);
+      const n = sh.length;
+      const nn = Math.max(0, Math.round(el.mass) - el.z);
+      const step = Math.min(15, 70 / Math.max(n - 1, 1));
+      const base = n > 1 ? 22 : 34;
+      let html = '<div class="at">';
+
+      const np = Math.min(el.z, 9);
+      const nu = Math.min(nn, 9);
+      for (let i = 0; i < np + nu; i++) {
+        const a = i * 137.5 * Math.PI / 180;
+        const r = 3 + 3.3 * Math.sqrt(i);
+        html += `<div class="pt ${i % 2 ? 'nt' : 'p'}" style="left:${(r * Math.cos(a)).toFixed(1)}px;top:${(r * Math.sin(a)).toFixed(1)}px;animation-delay:-${(i * 0.23).toFixed(2)}s">${i % 2 ? '' : '+'}</div>`;
+      }
+
+      sh.forEach((count, idx) => {
+        const R = base + idx * step;
+        html += `<div class="rn" style="width:${2 * R}px;height:${2 * R}px;left:-${R}px;top:-${R}px;--d:${5 + idx * 3.5}s;animation-direction:${idx % 2 ? 'reverse' : 'normal'}">`;
+        for (let k = 0; k < count; k++) {
+          html += `<div class="el" style="left:${R - 4.5}px;top:${R - 4.5}px;transform:rotate(${k * 360 / count}deg) translateY(-${R}px)"></div>`;
+        }
+        html += '</div>';
+      });
+
+      container.innerHTML = html + '</div>';
+    }
+
+    /* ==========================================================================
+       7. MODAL DE DETALHES DO ELEMENTO (CARTÃO INTERATIVO)
+       ========================================================================== */
+    const card = $('#card');
+    const cardInner = $('#ci');
+    const scrim = $('#scrim');
+
+    function getTargetCardRect() {
+      const W = Math.min(window.innerWidth - 20, 860);
+      const H = Math.min(window.innerHeight - 20, window.innerWidth < 720 ? 740 : 545);
+      return {
+        left: `${(window.innerWidth - W) / 2}px`,
+        top: `${(window.innerHeight - H) / 2}px`,
+        width: `${W}px`,
+        height: `${H}px`,
+        borderRadius: '24px'
+      };
+    }
+
+    const applyCardRect = rect => Object.assign(card.style, rect);
+
+    function buildCardContent(el) {
+      const [row, col] = getGridPosition(el.z);
+      const sh = getShells(el.z);
+      const neutrons = Math.round(el.mass) - el.z;
+      const isFBlock = el.category === 'l' || el.category === 'c';
+      const block = isFBlock ? 'f' : (el.z === 2 || col < 3 ? 's' : col > 12 ? 'p' : 'd');
+
+      const field = (label, val, wide = false) =>
+        `<div${wide ? ' class="w"' : ''}><small>${label}</small><b>${val}</b></div>`;
+
+      const withUnit = (val, key) =>
+        val == null ? '—' : `${formatNum(val, MODES[key])} ${MODES[key].u}`;
+
+      const state25 = STATES[getPhysicalState(el, 25)][0];
+
+      cardInner.innerHTML = `
+        <div class="lf">
+          <h3 id="card-title">Elemento nº ${el.z} · ${el.name}</h3>
+          <div class="ab" id="ab">
+            <div class="pr">${el.z} prótons<br>${neutrons} nêutrons<br>${el.z} elétrons</div>
+          </div>
+          <div class="dm">
+            <span>◂</span><hr><span>${el.radius != null ? el.radius + ' pm' : 'raio n/d'}</span><hr><span>▸</span>
+          </div>
+          <div class="sy">${el.symbol}</div>
+          <div class="nm">${el.name}</div>
+          <div class="pc">
+            <span><span class="dot p"></span>${el.z} prótons</span>
+            <span><span class="dot nt"></span>${neutrons} nêutrons</span>
+            <span><span class="dot" style="background: #ffd23f; border: 1.5px solid #6a5a10;"></span>${el.z} elétrons</span>
+          </div>
+        </div>
+
+        <div class="rg">
+          <div class="pg">
+            ${field('Categoria', `<span class="dot" style="background:var(--cat-${el.category})"></span>${CATEGORIES[el.category]}`, true)}
+            ${field('Grupo', isFBlock ? 'Série f (sem grupo)' : `${col}`)}
+            ${field('Período', row > 8 ? (row === 9 ? 6 : 7) : row)}
+            ${field('Bloco', `Bloco ${block}`)}
+            ${field('Estado (25 °C)', state25)}
+            ${field('Massa atômica', withUnit(el.mass, 'mass'))}
+            ${field('Eletronegatividade', el.electronegativity == null ? '—' : formatNum(el.electronegativity, { d: 2 }))}
+            ${field('Raio atômico', withUnit(el.radius, 'radius'))}
+            ${field('Densidade', withUnit(el.density, 'density'))}
+            ${field('Ponto de fusão', withUnit(el.meltingPoint, 'meltingPoint'))}
+            ${field('Ponto de ebulição', withUnit(el.boilingPoint, 'boilingPoint'))}
+            ${field('Elétrons de valência', `${sh[sh.length - 1]} elétron(s)`)}
+            ${field('Configuração eletrônica', getConfigText(el.z) + (EXCEPTIONS[el.z] ? ' *' : ''), true)}
+            ${field('Distribuição por camada', `${sh.join(' · ')} (${sh.length} camadas)`, true)}
+            ${EXCEPTIONS[el.z] ? '<div class="w"><small>* Exceção à Regra de Madelung</small><b style="font-size:12px;font-weight:500">Por estabilidade energética, a distribuição real difere do diagrama teórico de Pauling.</b></div>' : ''}
+          </div>
+        </div>
+      `;
+
+      renderAtomAnimation($('#ab'), el);
+    }
+
+    function openCard(z) {
+      activeCardZ = z;
+      const cell = cells[z];
+      const rect = cell.getBoundingClientRect();
+      const el = ELEMENTS[z - 1];
+
+      buildCardContent(el);
+
+      card.style.transition = 'none';
+      applyCardRect({
+        display: 'block',
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        borderRadius: '6px',
+        background: getComputedStyle(cell).backgroundColor
+      });
+
+      card.classList.remove('full');
+      void card.offsetWidth;
+      card.style.transition = '';
+      scrim.classList.add('on');
+      isCardOpen = true;
+
+      requestAnimationFrame(() => {
+        applyCardRect({ ...getTargetCardRect(), background: '#d4dae4' });
+        setTimeout(() => { if (isCardOpen) card.classList.add('full'); }, 260);
+      });
+    }
+
+    function closeCard() {
+      if (!isCardOpen) return;
+      isCardOpen = false;
+      const cell = cells[activeCardZ];
+      const rect = cell.getBoundingClientRect();
+
+      card.classList.remove('full');
+      scrim.classList.remove('on');
+
+      applyCardRect({
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        borderRadius: '6px',
+        background: getComputedStyle(cell).backgroundColor
+      });
+
+      setTimeout(() => {
+        if (!isCardOpen) card.style.display = 'none';
+      }, 460);
+    }
+
+    function navigateCard(delta) {
+      if (!isCardOpen) return;
+      activeCardZ = ((activeCardZ - 1 + delta + 118) % 118) + 1;
+      cardInner.classList.add('sw');
+      setTimeout(() => {
+        buildCardContent(ELEMENTS[activeCardZ - 1]);
+        cardInner.classList.remove('sw');
+      }, 170);
+    }
+
+    $('#x').onclick = closeCard;
+    scrim.onclick = closeCard;
+    $('#pv').onclick = () => navigateCard(-1);
+    $('#nx').onclick = () => navigateCard(1);
+
+    window.addEventListener('keydown', e => {
+      if (!isCardOpen) return;
+      if (e.key === 'Escape') closeCard();
+      if (e.key === 'ArrowLeft') navigateCard(-1);
+      if (e.key === 'ArrowRight') navigateCard(1);
+    });
+
+    let touchStartX = 0;
+    card.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    card.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(diff) > 50) navigateCard(diff > 0 ? -1 : 1);
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      if (isCardOpen) applyCardRect(getTargetCardRect());
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
