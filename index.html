@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f17">
   <title>Tabela Periódica</title>
   <style>
     /* ==========================================================================
@@ -596,7 +597,7 @@
         overflow-y: auto;
         overflow-x: hidden;
         padding-top: 0;
-        padding-bottom: 24px;
+        padding-bottom: 4px;
       }
 
       header {
@@ -607,9 +608,16 @@
         font-size: 15px;
       }
 
+      #menu {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+      }
+
       #menu button {
         padding: 5px 10px;
         font-size: 11.5px;
+        text-wrap: nowrap;
       }
 
       .table-wrapper {
