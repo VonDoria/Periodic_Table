@@ -640,6 +640,9 @@
         grid-template-columns: 210px 1fr;
         gap: 14px;
         padding: 14px;
+        /* max-height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch; */
       }
 
       .ab { height: 170px; }
@@ -1221,15 +1224,39 @@
     const cardInner = $('#ci');
     const scrim = $('#scrim');
 
+    function isMobileDevice() {
+      const isSmallViewport = window.matchMedia('(max-width: 768px)').matches;
+      const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const hasTouchPoints = navigator.maxTouchPoints > 0;
+      const uaDataMobile = navigator.userAgentData?.mobile;
+
+      if (typeof uaDataMobile === 'boolean') {
+        return uaDataMobile || (isSmallViewport && (hasCoarsePointer || hasTouchPoints));
+      }
+
+      return isSmallViewport && (hasCoarsePointer || hasTouchPoints);
+    }
+
     function getTargetCardRect() {
-      const W = Math.min(window.innerWidth - 20, 860);
-      const H = Math.min(window.innerHeight - 20, window.innerWidth < 720 ? 740 : 545);
+      const isPortraitMobile = window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
+      const mobile = isMobileDevice();
+
+      const availW = isPortraitMobile ? window.innerHeight : window.innerWidth;
+      const availH = isPortraitMobile ? window.innerWidth : window.innerHeight;
+
+      const margin = mobile ? 12 : 20;
+      const maxW = mobile ? availW - margin * 2 : Math.min(availW - margin * 2, 860);
+      const maxH = mobile ? availH - margin * 2 : Math.min(availH - margin * 2, 545);
+
+      const W = Math.max(280, maxW);
+      const H = Math.max(240, maxH);
+
       return {
-        left: `${(window.innerWidth - W) / 2}px`,
-        top: `${(window.innerHeight - H) / 2}px`,
+        left: `${(availW - W) / 2}px`,
+        top: `${(availH - H) / 2}px`,
         width: `${W}px`,
         height: `${H}px`,
-        borderRadius: '24px'
+        borderRadius: mobile ? '18px' : '24px'
       };
     }
 
@@ -1370,10 +1397,6 @@
 
     let touchStartX = 0;
     card.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-    card.addEventListener('touchend', e => {
-      const diff = e.changedTouches[0].screenX - touchStartX;
-      if (Math.abs(diff) > 50) navigateCard(diff > 0 ? -1 : 1);
-    }, { passive: true });
 
     window.addEventListener('resize', () => {
       if (isCardOpen) applyCardRect(getTargetCardRect());
